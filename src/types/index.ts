@@ -2,8 +2,18 @@ export interface Board
 {
     id: string,
     title: string,
-    date?: string | Date,
+    date: Date,
     category?: string, 
     wallperData?: string | null, 
-    countTask: number | null,
+    tasks: Task[],
+    visitedAt?: Date,
+}
+
+export interface Task
+{
+    id: string,
+    title?: string,
+    description?: string,
+    date?: Date,
+    status: 'todo' | 'in-progress' | 'complete',
 }

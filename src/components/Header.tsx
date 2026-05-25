@@ -11,6 +11,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useState } from "react";
 import { useStoreBoard } from "../store/boardStore";
 import CreateModal from "./CreateModal";
+import RecentBoard from "./RecentBoards";
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -61,6 +62,7 @@ const pages: string[] = [
 const Header = () => 
 {
     const {onOpenHandleModal} = useStoreBoard()
+    const [isRecentOpen, setIsRecentOpen] = useState(false)
     const count = 5
 
     const handlePage = ( page: string) =>
@@ -70,6 +72,10 @@ const Header = () =>
             case 'Create': 
                 onOpenHandleModal()
                 break
+            case 'Recent':
+                setIsRecentOpen(true)
+                break
+
         }
     }
 
@@ -236,6 +242,12 @@ const Header = () =>
             </AppBar>
 
             <CreateModal />
+
+            <RecentBoard 
+                open={isRecentOpen}
+                onClose={() => setIsRecentOpen(false)}
+            />
+
         </ThemeProvider>
     )
 }

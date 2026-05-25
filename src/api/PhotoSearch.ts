@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const ApiPhoto  = axios.create({
     baseURL: 'https://api.pexels.com/v1',
-    timeout: 1000,
+    timeout: 5000,
     headers:
     {
         Authorization: import.meta.env.VITE_API_KEY_PEXEL
@@ -18,7 +18,7 @@ export const FetchPhotos = async() =>
             params:
             {
                 page: MathRandom,
-                per_page: 20
+                per_page: 60
 
             }
         })
@@ -28,6 +28,6 @@ export const FetchPhotos = async() =>
     catch(err: any)
     {
         console.error('Error ', err.response?.data || err.message)
-        return undefined
+        return {photos: []}
     }
 }
