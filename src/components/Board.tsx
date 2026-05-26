@@ -5,7 +5,7 @@ import { Box, Button, Card, CardContent, Typography, alpha } from '@mui/material
 import AddIcon from '@mui/icons-material/Add';
 import { theme } from '../theme/Palette';
 import { useStoreBoard } from '../store/boardStore';
-import CreateTaskModal from './createTaskModal';
+import CreateTaskModal from './CreateTaskModal';
 
 const statusProps: Array<'todo' | 'in-progress' | 'complete'> = ['todo', 'in-progress', 'complete'];
 
