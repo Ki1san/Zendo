@@ -26,7 +26,7 @@ interface BoardProps {
   updateBoard: (id: string, newTitle: string) => void
   updateDate: (boardId: string) => void
 
-  addTask: (boardId: string, title: string, description?: string, file?: []) => void
+  addTask: (boardId: string, title: string, description?: string, file?: any[], markers?: string[]) => void
   updateTaskTitle: (boardId: string, taskId: string, newTitle: string) => void
   updateTaskDescription: (boardId: string, taskId: string, newDescription: string) => void
   updateTaskStatus: (boardId: string, taskId: string, newStatus: 'todo' | 'in-progress' | 'complete') => void
@@ -101,7 +101,7 @@ export const useStoreBoard = create<BoardProps>()(
         )
       })),
 
-      addTask: (boardId, title, description="", file=[]) => set((state) => ({
+      addTask: (boardId, title, description="", file=[], markers=[]) => set((state) => ({
         boards: state.boards.map((board) =>  
           board.id === boardId ? {
             ...board, 
@@ -111,7 +111,7 @@ export const useStoreBoard = create<BoardProps>()(
               description: description,
               file: file,
               deadline: new Date(),
-              marker: [],
+              marker: markers,
               date: new Date(),
               status: 'todo',
               isArhived: false
@@ -232,7 +232,7 @@ export const useStoreBoard = create<BoardProps>()(
       onCloseTaskModal: () => set({ selectedTask: null, isTaskModalOpen: false }),
 
       onOpenCreateTaskModal: (boardId: string) => set({selectedBoardId: boardId, isCreateTaskModalOpen: true }),
-      onCloseCreateTaskModal: () => set({ selectedTask: null, isCreateTaskModalOpen: false }),
+      onCloseCreateTaskModal: () => set({ selectedBoardId: null, isCreateTaskModalOpen: false }),
 
       onOpenArchiveTaskModal: (id: string) => set({ selectedTask: id, isArchiveTaskModalOpen: true }),
       onCloseArchiveTaskModal: () => set({ selectedTask: null, isArchiveTaskModalOpen: false }),
