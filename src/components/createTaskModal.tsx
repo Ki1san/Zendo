@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@emotion/react"
 import { theme } from "../theme/Palette"
-import { Modal, Box, Button, Typography, TextField, Chip, alpha, IconButton, InputAdornment } from '@mui/material';
+import { Modal, Box, Button, Typography, TextField, Chip, alpha, IconButton, InputAdornment, Card, CardContent } from '@mui/material';
 import { useStoreBoard } from "../store/boardStore"
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
@@ -8,17 +8,23 @@ import CloseIcon from '@mui/icons-material/Close';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Checkbox } from "@mui/material";
+import type { SubTasks } from '../types/index';
 
 const CreateTaskModal = () =>
 {
     const {id} = useParams<{ id: string }>()
     const {isCreateTaskModalOpen, boards, onCloseCreateTaskModal, addTask, fetchBoardById} = useStoreBoard()
+
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [fileList, setFileList] = useState<string[]>([])
+    const [deadline, setDeadline] = useState('')
     const [markers, setMarkers] = useState<string[]>([])
     const [markerInput, setMarkerInput] = useState('')
-
+    const [subTasksList, setSubTasksList] = useState<SubTasks[]>([])
+    const [subTasksInput, setSubTasksInput] = useState('')
+    
     useEffect(() => {
         if(id) {
             fetchBoardById(id)
@@ -39,17 +45,46 @@ const CreateTaskModal = () =>
         setMarkers(markers.filter((m) => m !== markerToDelete))
     }
 
+    const handleAddSubTask = () =>
+    {
+        if(!subTasksInput.trim()) return
+
+        const newSubTask: SubTasks =
+        {
+            id: crypto.randomUUID(),
+            title: subTasksInput,
+            checked: false
+        }
+
+        setSubTasksList([...subTasksList, newSubTask])
+        setSubTasksInput('')
+    }
+
+    const handleRemoveSubTask = (subTaskId: string) =>
+    {
+        setSubTasksList(subTasksList.filter(t => t.id !== subTaskId))
+    }
+
+    const toggleCheckedTask = (subTaskId: string) =>
+    {
+        setSubTasksList(subTasksList.map(task => 
+            task.id === subTaskId ? {...task, checked: !task.checked} : task
+        ))
+    }
+
     const handleCreate = (e: React.FormEvent) =>
     {
         e.preventDefault()
         if (!id || !title.trim()) return
 
-        addTask(id, title, description, fileList as any, markers)
+        addTask(id, title, description, [], deadline, [], subTasksList)
 
         setTitle('')
         setDescription('')
         setFileList([])
         setMarkers([])
+        setDeadline('')
+        setSubTasksList([])
         setMarkerInput('')
         onCloseCreateTaskModal()
     }
@@ -104,11 +139,27 @@ const CreateTaskModal = () =>
                         background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${alpha(theme.palette.secondary.main, 0.95)} 100%)`,
                         transform: 'translate(-50%, -50%)',
                         display: 'flex',
+                        height: 'fit-content',
                         gap: 3,
                         boxShadow: `0 25px 50px -12px ${alpha('#000000', 0.5)}, 0 0 0 1px ${alpha(theme.palette.secondary.contrastText, 0.1)}`,
                         flexDirection: 'column',
-                        p: 5,
+                        p: 3,
+                        overflow: 'auto',
+                        // Стили для Firefox
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent',
+                        // Стили для Chrome, Safari и Edge
+                        '&::-webkit-scrollbar': {
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: 'transparent',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+                        borderRadius: '4px',
+                        },
                         width: 420,
+                        maxHeight: "90vh",
                         alignItems: 'stretch',
                         outline: 'none',
                         borderRadius: 5,
@@ -183,6 +234,104 @@ const CreateTaskModal = () =>
                         onChange={(e) => setDescription(e.target.value)}
                         sx={{...textFieldStyles, '& .MuiOutlinedInput-root': {...textFieldStyles['& .MuiOutlinedInput-root'], minHeight: 100}}}
                     />
+
+                    <TextField 
+                        label="Deadline" 
+                        type="date" 
+                        variant="outlined" 
+                        fullWidth 
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        sx={{
+                            ...textFieldStyles,
+                            '& input[type="date"]': {
+                                color: theme.palette.secondary.contrastText,
+                                '&::-webkit-calendar-picker-indicator': {
+                                    filter: 'invert(1) brightness(100%)',
+                                    opacity: 0.8,
+                                    cursor: 'pointer'
+                                }
+                            }
+                        }}
+                    />
+
+                     <Box>
+                        <Typography variant="caption" sx={{ color: alpha(theme.palette.secondary.contrastText, 0.7), fontWeight: 600, display: 'block', mb: 1 }}>
+                            Subtasks
+                        </Typography>
+                        
+                        <TextField
+                            label="New Subtask"
+                            variant="outlined"
+                            fullWidth
+                            value={subTasksInput}
+                            onChange={(e) => setSubTasksInput(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault(); 
+                                    handleAddSubTask();
+                                }
+                            }}
+                            sx={textFieldStyles}
+                            slotProps={{
+                                input: {
+                                    endAdornment: (
+                                        <InputAdornment position="end">
+                                            <IconButton onClick={handleAddSubTask} edge="end" sx={{ color: theme.palette.primary.main }}>
+                                                <AddIcon fontSize="small" />
+                                            </IconButton>
+                                        </InputAdornment>
+                                    )
+                                }
+                            }}
+                        />
+
+                        {subTasksList.length > 0 && (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1.5, maxHeight: '200px', overflowY: 'auto', 
+                                overflowX: 'hidden', 
+                                pr: 1,
+                                // Стили для Firefox
+                                scrollbarWidth: 'thin',
+                                scrollbarColor: `${alpha(theme.palette.primary.main, 0.3)} transparent`,
+                                // Стили для Chrome, Safari и Edge
+                                '&::-webkit-scrollbar': {
+                                    width: '6px',
+                                    backgroundColor: 'transparent',
+                                },
+                                '&::-webkit-scrollbar-thumb': {
+                                    backgroundColor: alpha(theme.palette.primary.main, 0.3),
+                                    borderRadius: '3px',
+                                    '&:hover': {
+                                        backgroundColor: alpha(theme.palette.primary.main, 0.5),
+                                    }
+                                },
+                                '&::-webkit-scrollbar-track': {
+                                    backgroundColor: 'transparent',
+                                }
+                            }}>
+                                {subTasksList.map((subTask) => (
+                                    <Card key={subTask.id} sx={{ backgroundColor: alpha(theme.palette.secondary.contrastText, 0.05), border: `1px solid ${alpha(theme.palette.secondary.contrastText, 0.1)}`, borderRadius: 2, flexShrink: 0, minHeight: '48px'}}>
+                                        <CardContent sx={{ pb: '8px !important', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
+                                                <Checkbox 
+                                                    size="small" 
+                                                    checked={subTask.checked} 
+                                                    onChange={() => toggleCheckedTask(subTask.id)} 
+                                                    sx={{ color: alpha(theme.palette.secondary.contrastText, 0.4) }} />
+                                                <Typography variant="body2" sx={{ color: theme.palette.secondary.contrastText }}>
+                                                    {subTask.title}
+                                                </Typography>
+                                            </Box>
+                                            <IconButton size="small" onClick={() => handleRemoveSubTask(subTask.id)} sx={{ color: alpha(theme.palette.secondary.contrastText, 0.5), '&:hover': { color: theme.palette.warning.main }, flexShrink: 0 }}>
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
 
                     <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                         <TextField 
@@ -294,8 +443,8 @@ const CreateTaskModal = () =>
                         sx={{
                             display: 'flex',
                             justifyContent: 'flex-end',
-                            mt: 2,
-                            pt: 2,
+                            mt: 1,
+                            pt: 1,
                             gap: 2,
                             borderTop: `1px solid ${alpha(theme.palette.secondary.contrastText, 0.1)}`
                         }}

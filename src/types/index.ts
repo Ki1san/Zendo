@@ -12,12 +12,31 @@ export interface Board
 export interface Task
 {
     id: string,
-    title?: string,
+    title: string,
     description?: string,
     date?: Date,
-    marker: string[],
+    marker: '' |'important' | 'less important' | 'does not matter' | 'in-addition',
     file: any[],
-    deadline: Date,
+    deadline: Date | null,
+    subTsk?: SubTasks[],
     status: 'todo' | 'in-progress' | 'complete',
     isArhived: boolean
+}
+
+export interface SubTasks
+{
+    id: string,
+    title?: string,
+    checked: boolean
+}
+
+export interface ConfirmModalProps
+{
+    open: boolean
+    onClose: () => void
+    onConfirm: () => void
+    message: string
+    taskId: string | null
+    boarId: string | null
+    color?: 'error' | 'primary' 
 }

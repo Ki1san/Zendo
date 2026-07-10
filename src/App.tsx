@@ -3,7 +3,6 @@ import { ThemeProvider } from '@emotion/react'
 import {theme} from './theme/Palette'
 import DashBoard from './components/DashBoard'
 import Header from './components/Header'
-import DeleteModal from './components/DeleteModal'
 import { Route, Routes } from 'react-router-dom'
 import Board from './components/Board'
 

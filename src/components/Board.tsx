@@ -1,23 +1,24 @@
 import { useEffect } from 'react';
 import { useParams } from 'react-router';
 import { ThemeProvider } from '@emotion/react';
-import { Box, Button, Card, CardContent, Typography, alpha } from '@mui/material';
+import { Box, Button, Card, CardContent, CardMedia, Chip, Typography, alpha } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { theme } from '../theme/Palette';
 import { useStoreBoard } from '../store/boardStore';
 import CreateTaskModal from './CreateTaskModal';
+import Task from './Task';
 
 const statusProps: Array<'todo' | 'in-progress' | 'complete'> = ['todo', 'in-progress', 'complete'];
 
 const statusConfig = {
-  'todo': { label: 'To Do', color: '#3B82F6', bg: alpha('#3B82F6', 0.1) },
+  'todo': { label: 'To Do', color: '#d13bf6', bg: alpha('#3B82F6', 0.1) },
   'in-progress': { label: 'In Progress', color: '#0891B2', bg: alpha('#0891B2', 0.1) },
   'complete': { label: 'Done', color: '#16A34A', bg: alpha('#16A34A', 0.1) }
 };
 
 const Board = () => {
   const { id } = useParams<{ id: string }>();
-  const { currentBoard, fetchBoardById, onOpenCreateTaskModal, onOpenTaskModal } = useStoreBoard();
+  const { currentBoard, isTaskModalOpen, fetchBoardById, onOpenCreateTaskModal, onOpenTaskModal } = useStoreBoard();
 
   useEffect(() => {
     if (id) {
@@ -135,7 +136,6 @@ const Board = () => {
                   }
                 }}
               >
-                {/* Упрощённый заголовок колонки */}
                 <Box sx={{ 
                   display: 'flex', 
                   alignItems: 'center', 
@@ -165,7 +165,6 @@ const Board = () => {
                   </Typography>
                 </Box>
 
-                {/* Контейнер задач */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -184,35 +183,120 @@ const Board = () => {
                     }
                   }}
                 >
-                  {columnTasks.map((task) => (
-                    <Card
-                      key={task.id}
-                      onClick={() => onOpenTaskModal(task.id)}
-                      sx={{
-                        boxShadow: `0 2px 8px ${alpha(theme.palette.secondary.main, 0.08)}`,
-                        borderRadius: 3,
-                        backgroundColor: '#FFFFFF',
-                        borderLeft: `4px solid ${config.color}`,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        '&:hover': { 
-                          transform: 'translateY(-2px)',
-                          boxShadow: `0 8px 20px ${alpha(theme.palette.secondary.main, 0.15)}`
-                        }
-                      }}
-                    >
-                      <CardContent sx={{ p: 2 }}>
-                        <Typography variant="body2" sx={{ 
-                          color: '#1E293B', 
-                          fontWeight: 700,
-                          lineHeight: 1.4,
-                          fontSize: '0.95rem'
-                        }}>
-                          {task.title}
-                        </Typography>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {columnTasks.map((task) => {
+                    const totalSubTask = task?.subTsk?.length || 0
+                    const comletedSubTask = task?.subTsk?.filter(st => st.checked).length || 0
+                    const progressSubTask = totalSubTask > 0 ? (comletedSubTask / totalSubTask) * 100 : 0
+
+                    const hasImg = task.file && task.file.length > 0
+                    const coverImg = hasImg ? task.file[0] : null
+
+                    return(
+                      <Card
+                        key={task.id}
+                        onClick={() => onOpenTaskModal(task.id)}
+                        sx={{
+                          boxShadow: `0 2px 8px ${alpha(theme.palette.secondary.main, 0.08)}`,
+                          borderRadius: 3,
+                          backgroundColor: `${progressSubTask === 100 ? '#83f9a4' : '#ffffff'}`,
+                          borderLeft: `4px solid ${config.color}`,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': { 
+                            transform: 'translateY(-2px)',
+                            boxShadow: `0 8px 20px ${alpha(theme.palette.secondary.main, 0.15)}`
+                          }
+                        }}
+                      >
+
+                      {coverImg && (
+                        <CardMedia
+                          component="img"
+                          image={coverImg}
+                          alt={task.title}
+                          sx={{
+                            borderTopRightRadius: 12,
+                            objectFit: 'cover', 
+                            height: 140, 
+                            width: '100%',
+                            display: 'block'
+                          }}
+                        />
+                      )}
+                      
+                        <CardContent sx={{ p: 2, display: 'flex',flexDirection: 'column', gap: 0.5}}>
+                          {task.marker && task.marker.length > 0 && (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: -0.5 }}>
+                              {task.marker.map((markerText, index) => (
+                                <Chip
+                                  key={index}
+                                  label={markerText}
+                                  size="small"
+                                  sx={{
+                                    height: '20px',
+                                    fontSize: '0.7rem',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                                    color: theme.palette.primary.dark,
+                                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                                    '& .MuiChip-label': { px: 1 } // 
+                                  }}
+                                />
+                              ))}
+                            </Box>
+                          )}
+
+                          <Typography variant="body2" sx={{ 
+                            color: '#1E293B', 
+                            fontWeight: 700,
+                            lineHeight: 1.4,
+                            fontSize: '0.95rem'
+                          }}>
+                            {task.title}
+                          </Typography>
+
+                          {totalSubTask > 0 && (
+                            <Box sx={{ mt:'auto' }}>
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                <Typography 
+                                  variant="caption" 
+                                  sx={{ color: '#64748B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 0.5 }}
+                                >
+                                  Subtasks
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#475569', fontWeight: 700 }}>
+                                  {comletedSubTask}/{totalSubTask}
+                                </Typography>
+                              </Box>
+                              
+                              <Box sx={{ 
+                                width: '100%', 
+                                height: 6, 
+                                backgroundColor: '#E2E8F0', 
+                                borderRadius: 3,
+                                overflow: 'hidden'
+                              }}>
+                                <Box sx={{ 
+                                  width: `${progressSubTask}%`, 
+                                  height: '100%', 
+                                  backgroundColor: progressSubTask === 100 ? theme.palette.success.main : theme.palette.primary.main,
+                                  borderRadius: 3,
+                                  transition: 'width 0.3s ease'
+                                }} />
+                              </Box>
+                            </Box>
+                          )}
+
+                          <Typography variant='h6'>
+                            {task.isArhived && '(archive)'}
+                          </Typography>
+
+                        </CardContent>
+                      </Card>
+                  )})}
                 </Box>
 
                 <Button
@@ -250,6 +334,7 @@ const Board = () => {
           })}
         </Box>
       </Box>
+      {isTaskModalOpen && <Task />}
       <CreateTaskModal /> 
     </ThemeProvider>
   );

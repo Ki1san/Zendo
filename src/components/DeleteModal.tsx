@@ -3,7 +3,12 @@ import { useStoreBoard } from "../store/boardStore"
 import { theme } from "../theme/Palette"
 import { Box, Button, Modal, Typography } from "@mui/material"
 
-const DeleteModal = () => 
+interface DeleteProps
+{
+    open: boolean,
+    onClose: () => void
+}
+const DeleteModal = ({open, onClose} : DeleteProps) => 
 {
     const {isDeleteModalOpen, selectedBoardId, removeBoard, onCloseDeleteModal} = useStoreBoard() 
 
@@ -18,7 +23,7 @@ const DeleteModal = () =>
 
     return(
         <ThemeProvider theme={theme}>
-            <Modal open={isDeleteModalOpen} onClose={onCloseDeleteModal}>
+            <Modal open={open} onClose={onClose}>
                 <Box sx={{
                     minHeight: '100vh',
                     background: 'white'
